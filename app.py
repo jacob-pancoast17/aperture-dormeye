@@ -10,3 +10,7 @@ app = Flask(__name__)
 @app.route('/', methods=['GET'])
 def default():
     return render_template("index.html")
+
+@app.route('/main')
+def main():
+    return render_template("main.html")
