@@ -1,4 +1,4 @@
-from facial_recognition import *
+from face_recognition_app.facial_recognition import *
 from flask import *
 from picamera2 import Picamera2
 
@@ -27,7 +27,7 @@ def generate_frames():
 
         #yield from as mjpeg
         yield (b' --frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n + bytearray(buffer) + b'\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + bytearray(buffer) + b'\r\n')
 
 #@app.route("/login", methods=['POST'])
 #def login():
@@ -40,12 +40,12 @@ def default():
 
 @app.route('/main')
 def main():
-    return render_template("main.html")i
+    return render_template("main.html")
 
 @app.route('/video')
 def video():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-if __name__ == "__main__"
+if __name__ == "__main__":
     app.run(debug = True)
 
