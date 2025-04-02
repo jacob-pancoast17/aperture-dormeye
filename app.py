@@ -113,32 +113,6 @@ def generate_frames():
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + byte_frame + b'\r\n')
             
-       #process and annotate frame
-        #process_frame = process_frame(frame)
-        #display_frame = draw_results(processed_frame)
-
-        #print("test 2")
-
-        #add fps info to the frame
-        #current_fps = calculate_fps()
-        #cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30),
-        #            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-        #print("frame ready to be encoded")
-
-        #encode frame as jpeg
-        #ret, buffer = cv2.imencode('.jpg', display_frame)
-        #frame = buffer.tobytes()
-        #if not ret:
-        #    continue
-
-        #print("Frame encoded, about to be yielded")
-
-        #yield frame as mjpeg stream
-        #yield(b'--frame\r\n'
-        #        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-
 #@app.route("/login", methods=['POST'])
 #def login():
 #    print("Login")
