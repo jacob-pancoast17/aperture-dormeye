@@ -14,5 +14,15 @@
 
 	<button type="button">Add a user</button>
 	<button type="button">Remove a user</button>
+
+	<div>
+		<form action="" method='POST' enctype='multipart/form-data'>
+			{{form.hidden_tag()}}
+			{{form.file()}}
+			{{form.submit()}}
+		</form>
+	</div>
+
+	<ibutton type=button> </button>
 </body>
 </html>

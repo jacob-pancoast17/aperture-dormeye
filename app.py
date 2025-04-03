@@ -1,10 +1,16 @@
 from face_recognition_app.facial_recognition import *
 from flask import *
+from flask_wtf import FlaskForm
+from wtforms import FileField, SubmitField
 import cv2
 from picamera2 import Picamera2
 import pickle
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'aperture'
+app.config['UPLOAD_FOLDER'] = 'static/files'
 
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")
@@ -112,7 +118,11 @@ def generate_frames():
         # Yield the frame as an mjpeg stream
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + byte_frame + b'\r\n')
-            
+           
+class UploadFileForm(FlaskForm):
+    file = FileField("File")
+    submit = SubmitField("Upload File")
+
 #@app.route("/login", methods=['POST'])
 #def login():
 #    print("Login")
@@ -122,9 +132,10 @@ def generate_frames():
 def default():
     return render_template("index.html")
 
-@app.route('/main')
+@app.route('/main', methods=["GET", "POST"])
 def main():
-    return render_template("main.html")
+    form = UploadFileForm()
+    return render_template("main.html", form=form)
 
 @app.route('/video')
 def video():
