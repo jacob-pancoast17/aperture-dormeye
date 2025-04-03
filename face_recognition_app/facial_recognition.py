@@ -4,7 +4,7 @@ import numpy as np
 from picamera2 import Picamera2
 import time
 import pickle
-'''
+
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")
 with open("face_recognition_app/encodings.pickle", "rb") as f:
@@ -84,35 +84,28 @@ def calculate_fps():
         start_time = time.time()
     return fps
 
-#def generate_frames():
- #   while True:
+def generate_frames():
+    while True:
         # Capture a frame from camera
-  #      frame = picam2.capture_array()
+        frame = picam2.capture_array()
     
         # Process the frame with the function
-   #     processed_frame = process_frame(frame)
+        processed_frame = process_frame(frame)
     
         # Get the text and boxes to be drawn based on the processed frame
-    #    display_frame = draw_results(processed_frame)
+        display_frame = draw_results(processed_frame)
     
         # Calculate and update FPS
-     #   current_fps = calculate_fps()
+        current_fps = calculate_fps()
     
         # Attach FPS counter to the text and boxes
-      #  cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30), 
-        #            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     
-        # Display everything over the video feed.
-       # cv2.imshow('Video', display_frame)                 
+        # Encode frame as a jpeg
+        ret, buffer = cv2.imencode('.jpg', display_frame)
+        byte_frame = buffer.tobytes()
 
-        # Break the loop and stop the script if 'q' is pressed
-       # if cv2.waitKey(1) == ord("q"): 
-        #    break
-
-#generate_frames()
-
-# By breaking the loop we run this code here which closes everything
-cv2.destroyAllWindows()
-picam2.stop()
-
-'''
+        # Yield the frame as an mjpeg stream
+        yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + byte_frame + b'\r\n')

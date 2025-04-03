@@ -1,4 +1,4 @@
-from face_recognition_app.facial_recognition import *
+from face_recognition_app.facial_recognition import generate_frames
 from flask import *
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
@@ -14,9 +14,10 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e617560b98394dce3'
 app.config['UPLOAD_FOLDER'] = 'static/files'
-db = SQLAlchemy(app) # Creates database instance
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' # Connects app to the database
+#db = SQLAlchemy(app) # Creates database instance
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' # Connects app to the database
 
+'''
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")
 with open("face_recognition_app/encodings.pickle", "rb") as f:
@@ -122,15 +123,16 @@ def generate_frames():
         # Yield the frame as an mjpeg stream
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + byte_frame + b'\r\n')
-           
+
+'''
 class UploadFileForm(FlaskForm):
     file = FileField("File", validators=[InputRequired()])
     submit = SubmitField("Upload File")
 
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), nullable=False)
-    password = db.Column(db.String(80), nullable=False)
+#class User(db.Model, UserMixin):
+#    id = db.Column(db.Integer, primary_key=True)
+#    username = db.Column(db.String(20), nullable=False)
+#    password = db.Column(db.String(80), nullable=False)
 
 #@app.route("/login", methods=['POST'])
 #def login():
@@ -163,9 +165,9 @@ def video():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # user_loader callback reloads user object from id stored in the session
-@login_manager.user_loader
-def load_user(user_id):
-    return User.get(user_id)
+#@login_manager.user_loader
+#def load_user(user_id):
+#    return User.get(user_id)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0.', port=5000, debug=True, threaded=True)
