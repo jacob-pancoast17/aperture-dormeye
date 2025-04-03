@@ -1,7 +1,9 @@
 from face_recognition_app.facial_recognition import *
 from flask import *
+from flask_login import LoginManager
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
+from wtforms.validators import InputRequired
 import cv2
 from picamera2 import Picamera2
 import pickle
@@ -9,8 +11,12 @@ from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'aperture'
+app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e617560b98394dce3'
 app.config['UPLOAD_FOLDER'] = 'static/files'
+
+# Login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")
@@ -19,9 +25,8 @@ with open("face_recognition_app/encodings.pickle", "rb") as f:
 known_face_encodings = data["encodings"]
 known_face_names = data["names"]
 
-# Initialize our variables
+# Initialize our variables for face recognition configuration
 cv_scaler = 4 # must be a whole number
-
 face_locations = []
 face_encodings = []
 face_names = []
@@ -120,26 +125,45 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + byte_frame + b'\r\n')
            
 class UploadFileForm(FlaskForm):
-    file = FileField("File")
+    file = FileField("File", validators=[InputRequired()])
     submit = SubmitField("Upload File")
+
+#class User():
 
 #@app.route("/login", methods=['POST'])
 #def login():
 #    print("Login")
 #    return "Pressed"
 	
-@app.route('/')
+@app.route('/', methods=["GET", "POST"])
 def default():
     return render_template("index.html")
+
+@app.route('/login')
+def login():
+    return render_template("login.html")
+
+@app.route('/register')
+def register():
+    return render_template("register.html")
 
 @app.route('/main', methods=["GET", "POST"])
 def main():
     form = UploadFileForm()
+    if form.validate_on_submit():
+        file = form.file.data # Store the file in a variable
+        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], secure_filename(file.filename))) # Save the file
+        return render_template("main.html", form=form)
     return render_template("main.html", form=form)
 
 @app.route('/video')
 def video():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# user_loader callback reloads user object from id stored in the session
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0.', port=5000, debug=True, threaded=True)
