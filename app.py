@@ -1,6 +1,7 @@
 from face_recognition_app.facial_recognition import *
 from flask import *
-from flask_login import LoginManager
+from flask_login import UserMixin
+from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from wtforms.validators import InputRequired
@@ -13,10 +14,8 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e617560b98394dce3'
 app.config['UPLOAD_FOLDER'] = 'static/files'
-
-# Login manager
-login_manager = LoginManager()
-login_manager.init_app(app)
+db = SQLAlchemy(app) # Creates database instance
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' # Connects app to the database
 
 # Load pre-trained face encodings
 print("[INFO] loading encodings...")
@@ -128,7 +127,10 @@ class UploadFileForm(FlaskForm):
     file = FileField("File", validators=[InputRequired()])
     submit = SubmitField("Upload File")
 
-#class User():
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False)
+    password = db.Column(db.String(80), nullable=False)
 
 #@app.route("/login", methods=['POST'])
 #def login():
