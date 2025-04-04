@@ -6,6 +6,7 @@ from flask_wtf import FlaskForm
 from wtforms import FileField, PasswordField, StringField, SubmitField
 from wtforms.validators import InputRequired, Length, ValidationError
 from werkzeug.utils import secure_filename
+from flask_bcrypt import Bcrypt
 import os
 
 app = Flask(__name__)
@@ -13,6 +14,7 @@ app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e6175
 app.config['UPLOAD_FOLDER'] = 'static/files'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/pi/Desktop/aperture-dormeye/database.db' # Connects app to the database
 db = SQLAlchemy(app) # Creates database
+bcrypt = Bcrypt(app)
 
 # Creates the "upload" button for users to upload face files
 class UploadFileForm(FlaskForm):
@@ -55,6 +57,12 @@ def login():
 @app.route('/register', methods=["GET", "POST"])
 def register():
     form = RegisterForm()
+
+    if form.validate_on_submit():
+        hashed_password = bcrypt.gene rate_password_has(form.password.data)
+        new_user = User(form.username.data, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
     return render_template("register.html", form=form)
 
 @app.route('/main', methods=["GET", "POST"])
