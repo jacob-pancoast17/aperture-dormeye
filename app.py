@@ -12,20 +12,39 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e617560b98394dce3'
 app.config['UPLOAD_FOLDER'] = 'static/files'
+app.config['FACE_LOCATION'] = 'face_recognition_app/dataset'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/pi/Desktop/aperture-dormeye/database.db' # Connects app to the database
 db = SQLAlchemy(app) # Creates database
 bcrypt = Bcrypt(app)
 
 # Creates the "upload" button for users to upload face files
 class UploadFileForm(FlaskForm):
-    file = FileField("File", validators=[InputRequired()])
+    file = FileField("File")#, validators=[InputRequired()])
     submit = SubmitField("Upload File")
+
+class AddUserForm(FlaskForm):
+    name = StringField(validators=[InputRequired(), Length(min=2, max=30)], render_kw={"placeholder": "Name"})
+    submit = SubmitField("Add User")
+
+    def validate_name(self, name):
+        folder_path = os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                app.config["FACE_LOCATION"],
+                secure_filename(name.data)
+                )
+
+        if os.path.isdir(folder_path):
+            raise ValidationError("A user with that name already exists.")
 
 # Represents a User in the database, with an id, a unique username, and a password
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), nullable=False, unique=True)
     password = db.Column(db.String(80), nullable=False)
+
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
 
 class RegisterForm(FlaskForm):
     username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Username"})
@@ -34,7 +53,7 @@ class RegisterForm(FlaskForm):
 
     def validate_username(self, username):
         existing_user_username = User.query.filter_by(
-                usernam=username.data).first()
+                username=username.data).first()
 
         if existing_user_username:
             raise ValidationError(
@@ -58,21 +77,39 @@ def login():
 def register():
     form = RegisterForm()
 
+    # If a user successfully registers, store their hashed password and redirect them to the login page
     if form.validate_on_submit():
-        hashed_password = bcrypt.gene rate_password_has(form.password.data)
+        hashed_password = bcrypt.generate_password_hash(form.password.data)
         new_user = User(form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
+        return redirect(url_for('login'))
+
     return render_template("register.html", form=form)
 
 @app.route('/main', methods=["GET", "POST"])
 def main():
-    form = UploadFileForm()
-    if form.validate_on_submit():
-        file = form.file.data # Store the file in a variable
-        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], secure_filename(file.filename))) # Save the file
-        return render_template("main.html", form=form)
-    return render_template("main.html", form=form)
+    add_form = AddUserForm()
+    upload_form = UploadFileForm()
+    if add_form.submit.data and add_form.validate_on_submit():
+        name = add_form.name.data
+        
+        os.mkdir(
+                os.path.join(
+                    os.path.abspath(os.path.dirname(__file__)),
+                    app.config['FACE_LOCATION'],
+                    secure_filename(name))
+                )
+        
+        #return render_template("main.html", upload_form=upload_form, add_form=add_form)
+
+    #if upload_form.validate_on_submit():
+    #    file = request.files.get('file') # Store the file in a variable
+    #    file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], secure_filename(file.filename))) # Save the file
+        
+    #    return render_template("main.html", upload_form=upload_form, add_form=add_form)
+
+    return render_template("main.html", upload_form=upload_form, add_form=add_form)
 
 @app.route('/video')
 def video():

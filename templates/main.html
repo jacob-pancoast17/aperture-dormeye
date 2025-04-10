@@ -16,10 +16,20 @@
 	<button type="button">Remove a user</button>
 
 	<div>
+		<form action="" method='POST'>
+			{{ add_form.hidden_tag() }}
+			{{ add_form.name() }}
+			{% for errors in add_form.name.errors %}
+				<span style="color:red">A user with that name already exists.</span>
+			{% endfor %}
+			{{ add_form.submit() }}
+	</div>
+
+	<div>
 		<form action="" method='POST' enctype='multipart/form-data'>
-			{{ form.hidden_tag() }}
-			{{ form.file() }}
-			{{ form.submit() }}
+			{{ upload_form.hidden_tag() }}
+			{{ upload_form.file() }}
+			{{ upload_form.submit() }}
 		</form>
 	</div>
 
