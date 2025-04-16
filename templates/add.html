@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Add User</title>
+</head>
+<body>
+	<h1>Add User</h1>
+
+	<form action="" method='POST'>
+		{{ add_form.hidden_tag() }}
+		{{ add_form.name() }}
+		{% for errors in add_form.name.errors %}
+			<span class="error" style="color:red">A user with that name already exists!</span>
+		{% endfor %}
+		{{ add_form.submit() }}
+
+</body>
+</html>

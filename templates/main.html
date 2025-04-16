@@ -12,16 +12,22 @@
 		<img id='video-feed' src="{{ url_for('video') }}" width="50%"/>
 	</div>
 
+	<form action="{{ url_for('add') }}">
+		<input type="submit" value="Add a User" />
+	</form>
+
+	<!-->
 	<button type="button" id="toggleDropdown">Add a user</button><br>
-		<div id="addUserDropdown" style="display: none">
+	<div id="addUserDropdown" style="display: none">
 			<form action="" method='POST'>
 				{{ add_form.hidden_tag() }}
 				{{ add_form.name() }}
 				{% for errors in add_form.name.errors %}
-					<span style="color:red">A user with that name already exists.</span>
+					<span class="error" style="color:red">A user with that name already exists.</span>
 				{% endfor %}
 				{{ add_form.submit() }}	
 		</div>
+	<-->
 	<br><button type="button">Remove a user</button>
 
 	<div>
@@ -32,7 +38,7 @@
 		</form>
 	</div>
 
-	<ibutton type=button> </button>
+	<button type=button>buton</button>
 
 	<script src="{{ url_for('static', filename='add-user-dropdown.js') }}"></script>
 </body>

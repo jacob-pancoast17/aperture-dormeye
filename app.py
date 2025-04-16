@@ -19,7 +19,7 @@ bcrypt = Bcrypt(app)
 
 # Creates the "upload" button for users to upload face files
 class UploadFileForm(FlaskForm):
-    file = FileField("File")#, validators=[InputRequired()])
+    file = FileField("File", validators=[InputRequired()])
     submit = SubmitField("Upload File")
 
 class AddUserForm(FlaskForm):
@@ -89,24 +89,29 @@ def register():
 
 @app.route('/main', methods=["GET", "POST"])
 def main():
-    add_form = AddUserForm()
+    #add_form = AddUserForm()
     upload_form = UploadFileForm()
-    if add_form.submit.data and add_form.validate_on_submit():
-        name = add_form.name.data
+    #if add_form.submit.data and add_form.validate_on_submit():
+    #    name = add_form.name.data
         
-        os.mkdir(
-                os.path.join(
-                    os.path.abspath(os.path.dirname(__file__)),
-                    app.config['FACE_LOCATION'],
-                    secure_filename(name))
-                )
-        
+    #   os.mkdir(
+    #            os.path.join(
+    #                os.path.abspath(os.path.dirname(__file__)),
+    #                app.config['FACE_LOCATION'],
+    #                secure_filename(name))
+    #            )
         #return render_template("main.html", upload_form=upload_form, add_form=add_form)
 
-    #if upload_form.validate_on_submit():
-    #    file = request.files.get('file') # Store the file in a variable
-    #    file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], secure_filename(file.filename))) # Save the file
-        
+    if upload_form.submit.data and upload_form.validate_on_submit():
+        #file = request.files.get('file') # Store the file in a variable
+        file = upload_form.file.data
+        file.save(
+                os.path.join(
+                    os.path.abspath(os.path.dirname(__file_)),  
+                    app.config['UPLOAD_FOLDER'],
+                    secure_filename(file.filename))
+                    ) # Save the file
+
     #    return render_template("main.html", upload_form=upload_form, add_form=add_form)
 
     return render_template("main.html", upload_form=upload_form, add_form=add_form)
@@ -114,6 +119,21 @@ def main():
 @app.route('/video')
 def video():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/add', methods=["GET", "POST"])
+def add():
+    add_form = AddUserForm()
+
+    if add_form.submit.data and add_form.validate_on_submit():
+        name = add_form.name.data
+        
+        os.mkdir(
+                os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                app.config['FACE_LOCATION'],
+                secure_filename(name))
+                )
+    return render_template("add.html", add_form=add_form)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0.', port=5000, debug=True, threaded=True)

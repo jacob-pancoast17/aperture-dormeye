@@ -7,4 +7,5 @@ window.addEventListener("DOMContentLoaded", () => {
 		content.style.display = isVisible ? "none" : "block";
 		toggleButton.textContent = isVisible ? "Add User" : "Minimize";
 	});
+
 });
