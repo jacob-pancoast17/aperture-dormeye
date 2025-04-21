@@ -3,11 +3,12 @@ from flask import *
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileAllowed, FileRequired
+from flask_wtf.file import FileAllowed, FileRequired, MultipleFileField
 from wtforms import FileField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, InputRequired, Length, ValidationError
 from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt
+import shutil
 import os
 
 app = Flask(__name__)
@@ -30,9 +31,9 @@ class UploadFileForm(FlaskForm):
 
 class AddUserForm(FlaskForm):
     name = StringField(validators=[InputRequired(), Length(min=2, max=30)], render_kw={"placeholder": "Name"})
-    file = FileField("File", validators=[
+    files = MultipleFileField("Files", validators=[
         FileRequired(),
-        FileAllowed(['.jpg', '.jpeg', '.png'], 'Images only!')
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')
         ])
     submit = SubmitField("Add User")
 
@@ -137,14 +138,18 @@ def add():
     # If form is submitted, create a new directory in FACE_LOCATIONS with the new name 
     if add_form.submit.data and add_form.validate_on_submit():
         name = add_form.name.data.strip()
-        file = add_form.file.data
+        files = request.files.getlist(add_form.files.name)
+        
+        # Create the directory
         dir = os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
                 app.config['FACE_LOCATION'],
                 secure_filename(name))
 
         os.mkdir(dir)
-        file.save(dir, secure_filename(file.filename))
+
+        for file in files:
+            file.save(os.path.join(dir, secure_filename(file.filename)))
 
         # Add the user to the database
         new_user = User(name=name)
@@ -166,7 +171,7 @@ def remove_user(user_id):
         abort(404)
 
     # Remove the dataset folder
-    os.rmdir(
+    shutil.rmtree(
             os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
                 app.config['FACE_LOCATION'],
