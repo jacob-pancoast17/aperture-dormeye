@@ -14,25 +14,29 @@
 			<span class="error" style="color:red">A user with that name already exists!</span>
 		{% endfor %}
 		{{ add_form.submit() }}
+	</form>
 
 	<table>
 		<tr>
-			<th>ID</th>
 			<th>Name</th>
 			<th></th>
 		</tr>
 		{% for user in users %}
 		<tr>
-			<td>{{ user.id }}</td>
 			<td>{{ user.name }}</td>
 			<td>
 				<form action="{{ url_for('remove_user', user_id=user.id) }}" method="POST">
-					<button type="submit" onclick="return confirm('Remove {{ user.name }}?')">Remove</button>
+					<button type="submit">Remove</button>
 				</form>
 			</td>
 		</tr>
 		{% endfor %}
 	</table>
+	<br>
+	<br>
+	<form action="{{ url_for('main') }}">
+		<input type="submit" value="Camera Feed" />	
+	</form>
 
 </body>
 </html>

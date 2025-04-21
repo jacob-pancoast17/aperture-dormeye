@@ -13,7 +13,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e617560b98394dce3'
 app.config['UPLOAD_FOLDER'] = 'static/files'
 app.config['FACE_LOCATION'] = 'face_recognition_app/dataset'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/pi/Desktop/aperture-dormeye/users.db' # Connects app to the database
+basedir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(basedir, 'users.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}' # Connects app to the database
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #db = SQLAlchemy(app) # Creates database for login
 db = SQLAlchemy(app)
@@ -151,7 +153,19 @@ def add():
 
 @app.route('/remove_user/<int:user_id>', methods=["POST"])
 def remove_user(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.session.get(User, user_id)
+    name = user.name.strip()
+
+    if user is None:
+        abort(404)
+
+    # Remove the dataset folder
+    os.rmdir(
+            os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                app.config['FACE_LOCATION'],
+                secure_filename(name))
+            )
 
     # Remove from database
     db.session.delete(user)
