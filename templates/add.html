@@ -15,5 +15,24 @@
 		{% endfor %}
 		{{ add_form.submit() }}
 
+	<table>
+		<tr>
+			<th>ID</th>
+			<th>Name</th>
+			<th></th>
+		</tr>
+		{% for user in users %}
+		<tr>
+			<td>{{ user.id }}</td>
+			<td>{{ user.name }}</td>
+			<td>
+				<form action="{{ url_for('remove_user', user_id=user.id) }}" method="POST">
+					<button type="submit" onclick="return confirm('Remove {{ user.name }}?')">Remove</button>
+				</form>
+			</td>
+		</tr>
+		{% endfor %}
+	</table>
+
 </body>
 </html>

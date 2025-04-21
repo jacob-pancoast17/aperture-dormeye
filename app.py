@@ -13,8 +13,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e617560b98394dce3'
 app.config['UPLOAD_FOLDER'] = 'static/files'
 app.config['FACE_LOCATION'] = 'face_recognition_app/dataset'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/pi/Desktop/aperture-dormeye/database.db' # Connects app to the database
-db = SQLAlchemy(app) # Creates database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/pi/Desktop/aperture-dormeye/users.db' # Connects app to the database
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#db = SQLAlchemy(app) # Creates database for login
+db = SQLAlchemy(app)
+
 bcrypt = Bcrypt(app)
 
 # Creates the "upload" button for users to upload face files
@@ -37,14 +40,25 @@ class AddUserForm(FlaskForm):
             raise ValidationError("A user with that name already exists.")
 
 # Represents a User in the database, with an id, a unique username, and a password
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), nullable=False, unique=True)
-    password = db.Column(db.String(80), nullable=False)
+#for login
+#class User(db.Model, UserMixin):
+#    id = db.Column(db.Integer, primary_key=True)
+#    username = db.Column(db.String(20), nullable=False, unique=True)
+#    password = db.Column(db.String(80), nullable=False)
+#
+#    def __init__(self, username, password):
+#        self.username = username
+#        self.password = password
 
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
+#Represents a User in the database with a name
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+
+    def __init__(self, name):
+        self.name = name
 
 class RegisterForm(FlaskForm):
     username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Username"})
@@ -89,19 +103,8 @@ def register():
 
 @app.route('/main', methods=["GET", "POST"])
 def main():
-    #add_form = AddUserForm()
     upload_form = UploadFileForm()
-    #if add_form.submit.data and add_form.validate_on_submit():
-    #    name = add_form.name.data
-        
-    #   os.mkdir(
-    #            os.path.join(
-    #                os.path.abspath(os.path.dirname(__file__)),
-    #                app.config['FACE_LOCATION'],
-    #                secure_filename(name))
-    #            )
-        #return render_template("main.html", upload_form=upload_form, add_form=add_form)
-
+    
     if upload_form.submit.data and upload_form.validate_on_submit():
         #file = request.files.get('file') # Store the file in a variable
         file = upload_form.file.data
@@ -114,7 +117,7 @@ def main():
 
     #    return render_template("main.html", upload_form=upload_form, add_form=add_form)
 
-    return render_template("main.html", upload_form=upload_form, add_form=add_form)
+    return render_template("main.html", upload_form=upload_form)
 
 @app.route('/video')
 def video():
@@ -124,8 +127,9 @@ def video():
 def add():
     add_form = AddUserForm()
 
-    if add_form.submit.data and add_form.validate_on_submit():
-        name = add_form.name.data
+    # If form is submitted, create a new directory in FACE_LOCATIONS with the new name 
+    if add_form.submit.name in request.form and add_form.validate_on_submit():
+        name = add_form.name.data.strip()
         
         os.mkdir(
                 os.path.join(
@@ -133,7 +137,30 @@ def add():
                 app.config['FACE_LOCATION'],
                 secure_filename(name))
                 )
-    return render_template("add.html", add_form=add_form)
+
+        # Add the user to the database
+        new_user = User(name=name)
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for("add"))
+
+    users = User.query.all()
+
+    return render_template("add.html", add_form=add_form, users=users)
+
+@app.route('/remove_user/<int:user_id>', methods=["POST"])
+def remove_user(user_id):
+    user = User.query.get_or_404(user_id)
+
+    # Remove from database
+    db.session.delete(user)
+    db.session.commit()
+
+    return redirect(url_for("add"))
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0.', port=5000, debug=True, threaded=True)
