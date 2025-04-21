@@ -3,8 +3,9 @@ from flask import *
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileRequired
 from wtforms import FileField, PasswordField, StringField, SubmitField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms.validators import DataRequired, InputRequired, Length, ValidationError
 from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt
 import os
@@ -25,10 +26,14 @@ bcrypt = Bcrypt(app)
 # Creates the "upload" button for users to upload face files
 class UploadFileForm(FlaskForm):
     file = FileField("File", validators=[InputRequired()])
-    submit = SubmitField("Upload File")
+    submit = SubmitField("Upload")
 
 class AddUserForm(FlaskForm):
     name = StringField(validators=[InputRequired(), Length(min=2, max=30)], render_kw={"placeholder": "Name"})
+    file = FileField("File", validators=[
+        FileRequired(),
+        FileAllowed(['.jpg', '.jpeg', '.png'], 'Images only!')
+        ])
     submit = SubmitField("Add User")
 
     def validate_name(self, name):
@@ -130,15 +135,16 @@ def add():
     add_form = AddUserForm()
 
     # If form is submitted, create a new directory in FACE_LOCATIONS with the new name 
-    if add_form.submit.name in request.form and add_form.validate_on_submit():
+    if add_form.submit.data and add_form.validate_on_submit():
         name = add_form.name.data.strip()
-        
-        os.mkdir(
-                os.path.join(
+        file = add_form.file.data
+        dir = os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
                 app.config['FACE_LOCATION'],
                 secure_filename(name))
-                )
+
+        os.mkdir(dir)
+        file.save(dir, secure_filename(file.filename))
 
         # Add the user to the database
         new_user = User(name=name)

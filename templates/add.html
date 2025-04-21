@@ -13,6 +13,7 @@
 		{% for errors in add_form.name.errors %}
 			<span class="error" style="color:red">A user with that name already exists!</span>
 		{% endfor %}
+		{{ add_form.file() }}
 		{{ add_form.submit() }}
 	</form>
 
@@ -25,7 +26,7 @@
 		<tr>
 			<td>{{ user.name }}</td>
 			<td>
-				<form action="{{ url_for('remove_user', user_id=user.id) }}" method="POST">
+				<form action="{{ url_for('remove_user', user_id=user.id) }}" enctype="multipart/form-data" method='POST'>
 					<button type="submit">Remove</button>
 				</form>
 			</td>
