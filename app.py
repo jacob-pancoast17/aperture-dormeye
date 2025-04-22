@@ -9,12 +9,15 @@ from wtforms.validators import DataRequired, InputRequired, Length, ValidationEr
 from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt
 import shutil
+import subprocess
 import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e617560b98394dce3'
 app.config['UPLOAD_FOLDER'] = 'static/files'
 app.config['FACE_LOCATION'] = 'face_recognition_app/dataset'
+app.config['TRAINING_LOCATION'] = 'face_recognition_app/model_training.py'
+app.config['PICKLE_LOCATION'] = 'face_recognition_app/encodings.pickle'
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'users.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}' # Connects app to the database
@@ -151,6 +154,12 @@ def add():
         for file in files:
             file.save(os.path.join(dir, secure_filename(file.filename)))
 
+        # Trains the model
+        path = os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                app.config['TRAINING_LOCATION'])
+        subprocess.run(['python3', path], check=True)
+
         # Add the user to the database
         new_user = User(name=name)
         db.session.add(new_user)
@@ -177,6 +186,18 @@ def remove_user(user_id):
                 app.config['FACE_LOCATION'],
                 secure_filename(name))
             )
+
+    # Re-train the model
+    os.remove(
+            os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                app.config['PICKLE_LOCATION'])
+            )
+
+    path = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            app.config['TRAINING_LOCATION'])
+    subprocess.run(['python3', path], check=True)
 
     # Remove from database
     db.session.delete(user)

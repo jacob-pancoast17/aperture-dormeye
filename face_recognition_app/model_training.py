@@ -25,7 +25,7 @@ for (i, imagePath) in enumerate(imagePaths):
 
 print("[INFO] serializing encodings...")
 data = {"encodings": knownEncodings, "names": knownNames}
-with open("encodings.pickle", "wb") as f:
+with open("face_recognition_app/encodings.pickle", "wb") as f:
     f.write(pickle.dumps(data))
 
 print("[INFO] Training complete. Encodings saved to 'encodings.pickle'")
