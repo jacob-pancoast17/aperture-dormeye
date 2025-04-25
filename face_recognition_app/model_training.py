@@ -4,20 +4,28 @@ import face_recognition
 import pickle
 import cv2
 
+path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'encodings.pickle'
+        )
+
 print("[INFO] start processing faces...")
 imagePaths = list(paths.list_images("dataset"))
+print((f"image #: {len(imagePaths)}"))
 knownEncodings = []
 knownNames = []
 
 for (i, imagePath) in enumerate(imagePaths):
     print(f"[INFO] processing image {i + 1}/{len(imagePaths)}")
     name = imagePath.split(os.path.sep)[-2]
-    
+    print(name)
     image = cv2.imread(imagePath)
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     boxes = face_recognition.face_locations(rgb, model="hog")
     encodings = face_recognition.face_encodings(rgb, boxes)
+    if len(encodings) == 0:
+        print(f"[WARN] No face found in: {imagePath}")
     
     for encoding in encodings:
         knownEncodings.append(encoding)
@@ -25,7 +33,7 @@ for (i, imagePath) in enumerate(imagePaths):
 
 print("[INFO] serializing encodings...")
 data = {"encodings": knownEncodings, "names": knownNames}
-with open("face_recognition_app/encodings.pickle", "wb") as f:
+with open(path, "wb") as f:
     f.write(pickle.dumps(data))
 
 print("[INFO] Training complete. Encodings saved to 'encodings.pickle'")

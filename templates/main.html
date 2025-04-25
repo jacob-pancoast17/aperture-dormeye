@@ -3,25 +3,27 @@
 <head>
 	<meta charset='UTF-8'>
 	<title>account</title>
+	<link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}">
 </head>
 <body>
-	<h1>Live Stream</h1>
-	<div>
-		<img id='video-feed' src="{{ url_for('video') }}" width="50%"/>
+	<h1>Your DormEye</h1>
+
+	<hr width="75%" size="4"><br>
+
+	<div class="video">
+		<img id='video-feed' src="{{ url_for('video') }}" />
 	</div>
-
-	<form action="{{ url_for('add') }}">
-		<input type="submit" value="Users" />
-	</form>
-
-	<div>
-		<form action="" method='POST' enctype='multipart/form-data'>
-			{{ upload_form.hidden_tag() }}
-			{{ upload_form.file() }}
-			{{ upload_form.submit() }}
+	
+	<div class="info">
+		<svg height="100" width="60" class="blinking">
+  			<circle cx="50" cy="50" r="10" fill="red" />
+  			Sorry, your browser does not support inline SVG.
+		</svg>
+		<span class="live">LIVE</span>
+		<span>Camera Route</span>
+		<form action="{{ url_for('add') }}">
+			<input type="submit" value="Users" />
 		</form>
 	</div>
-
-	<script src="{{ url_for('static', filename='add-user-dropdown.js') }}"></script>
 </body>
 </html>

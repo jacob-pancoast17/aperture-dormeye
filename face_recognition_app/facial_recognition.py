@@ -4,13 +4,22 @@ import numpy as np
 from picamera2 import Picamera2
 import time
 import pickle
+import os
 
-# Load pre-trained face encodings
-print("[INFO] loading encodings...")
-with open("face_recognition_app/encodings.pickle", "rb") as f:
-    data = pickle.loads(f.read())
-known_face_encodings = data["encodings"]
-known_face_names = data["names"]
+def load_encodings():
+    path = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'encodings.pickle'
+            )
+
+    # Load pre-trained face encodings
+    print("[INFO] loading encodings...")
+    with open(path, "rb") as f:
+        data = pickle.loads(f.read())
+        print(data)
+    global known_face_encodings, known_face_names
+    known_face_encodings = data["encodings"]
+    known_face_names = data["names"]
 
 # Initialize the camera
 picam2 = Picamera2()
@@ -26,6 +35,8 @@ face_names = []
 frame_count = 0
 start_time = time.time()
 fps = 0
+
+current_faces = []
 
 def process_frame(frame):
     global face_locations, face_encodings, face_names
@@ -48,18 +59,26 @@ def process_frame(frame):
 
         if not known_face_encodings:
             face_names.append(name)
+            # New code
+            if name not in current_faces:
+                current_faces.append(name)
             continue
         
         # Use the known face with the smallest distance to the new face
         face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
 
-        if len(face_distance) > 0:
-            best_match_index = np.argmin(face_distances)
-            if matches[best_match_index]:
-                name = known_face_names[best_match_index]
+        #if len(face_distance) > 0:
+        best_match_index = np.argmin(face_distances)
+        if matches[best_match_index]:
+            name = known_face_names[best_match_index]
 
         face_names.append(name)
     
+    for name in current_faces:
+        if name not in face_names:
+            current_faces.remove(name)
+    print(current_faces)
+
     return frame
 
 def draw_results(frame):
@@ -116,3 +135,6 @@ def generate_frames():
         # Yield the frame as an mjpeg stream
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + byte_frame + b'\r\n')
+
+if __name__ == "__main__":
+    initialize()

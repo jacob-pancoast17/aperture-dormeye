@@ -1,4 +1,4 @@
-from face_recognition_app.facial_recognition import generate_frames
+from face_recognition_app import facial_recognition
 from flask import *
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
@@ -8,6 +8,8 @@ from wtforms import FileField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, InputRequired, Length, ValidationError
 from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt
+import importlib
+import time
 import shutil
 import subprocess
 import os
@@ -17,15 +19,25 @@ app.config['SECRET_KEY'] = 'ca258998190a853b6a12d1133e083a7463e25f260738307e6175
 app.config['UPLOAD_FOLDER'] = 'static/files'
 app.config['FACE_LOCATION'] = 'face_recognition_app/dataset'
 app.config['TRAINING_LOCATION'] = 'face_recognition_app/model_training.py'
-app.config['PICKLE_LOCATION'] = 'face_recognition_app/encodings.pickle'
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'users.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}' # Connects app to the database
+logs_path = os.path.join(basedir, 'logs.db')
+pickle_path = os.path.join(basedir, 'face_recognition_app/encodings.pickle')
+app.config['PICKLE_LOCATION'] = f'{pickle_path}'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}' # Connects app to the database for users
+app.config['SQLALCHEMY_BINDS'] = {
+            'logs': 'sqlite:///{logs_path}'
+        }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-#db = SQLAlchemy(app) # Creates database for login
 db = SQLAlchemy(app)
 
 bcrypt = Bcrypt(app)
+facial_recognition.load_encodings()
+
+# Create the pickle file if one doesn't exist
+if (not os.path.exists(pickle_path)):
+    f = open(pickle_path, "w")
+    f.close()
 
 # Creates the "upload" button for users to upload face files
 class UploadFileForm(FlaskForm):
@@ -69,6 +81,16 @@ class User(db.Model):
     name = db.Column(db.String(50), unique=True)
 
     def __init__(self, name):
+        self.name = name
+
+class Logs(db.Model):
+    __bind_key__ = 'logs'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.String(100), unique=True)
+    name = db.Column(db.String(50))
+
+    def __init__(self, date, name):
+        self.date = date
         self.name = name
 
 class RegisterForm(FlaskForm):
@@ -132,7 +154,7 @@ def main():
 
 @app.route('/video')
 def video():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(facial_recognition.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/add', methods=["GET", "POST"])
 def add():
@@ -158,7 +180,8 @@ def add():
         path = os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
                 app.config['TRAINING_LOCATION'])
-        subprocess.run(['python3', path], check=True)
+        subprocess.run(['python3', path], check=True, cwd=os.path.dirname(path))
+        facial_recognition.load_encodings()
 
         # Add the user to the database
         new_user = User(name=name)
@@ -197,7 +220,8 @@ def remove_user(user_id):
     path = os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
             app.config['TRAINING_LOCATION'])
-    subprocess.run(['python3', path], check=True)
+    subprocess.run(['python3', path], check=True, cwd=os.path.dirname(path))
+    facial_recognition.load_encodings()
 
     # Remove from database
     db.session.delete(user)
@@ -207,6 +231,7 @@ def remove_user(user_id):
 
 with app.app_context():
     db.create_all()
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0.', port=5000, debug=True, threaded=True)

@@ -36,6 +36,7 @@ authorized_names = ["john", "alice", "bob"]  # Replace with names you wish to au
 
 def process_frame(frame):
     global face_locations, face_encodings, face_names
+    #face_detected = False
     
     # Resize the frame using cv_scaler to increase performance (less pixels processed, less time spent)
     resized_frame = cv2.resize(frame, (0, 0), fx=(1/cv_scaler), fy=(1/cv_scaler))
@@ -47,6 +48,10 @@ def process_frame(frame):
     face_locations = face_recognition.face_locations(rgb_resized_frame)
     face_encodings = face_recognition.face_encodings(rgb_resized_frame, face_locations, model='large')
     
+    #if face_locations and face_encodings:
+    #    face_detected = True
+    #    print("Face detected!")
+
     face_names = []
     authorized_face_detected = False
     

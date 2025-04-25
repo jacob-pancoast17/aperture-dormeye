@@ -3,9 +3,11 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Add User</title>
+	<link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-	<h1>Add User</h1>
+	<h2>Add a User</h2>
 
 	<form action="" enctype="multipart/form-data" method='POST'>
 		{{ add_form.hidden_tag() }}
@@ -13,10 +15,11 @@
 		{% for errors in add_form.name.errors %}
 			<span class="error" style="color:red">A user with that name already exists!</span>
 		{% endfor %}
-		{{ add_form.files(multiple=true) }}<br>
+		{{ add_form.files(multiple=true) }}<br><br>
 		{{ add_form.submit() }}
-	</form>
+	</form><br>
 
+	<h2>Users</h2>
 	<table>
 		<tr>
 			<th>Name</th>
@@ -24,10 +27,15 @@
 		</tr>
 		{% for user in users %}
 		<tr>
-			<td>{{ user.name }}</td>
+			<td>
+				<div class="name">
+				{{ user.name }}
+				</div>
+			</td>
+			
 			<td>
 				<form action="{{ url_for('remove_user', user_id=user.id) }}" method='POST'>
-					<button type="submit">Remove</button>
+					<button type="submit">Remove <i class="fa fa-trash"></i></button>
 				</form>
 			</td>
 		</tr>
