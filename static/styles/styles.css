@@ -79,8 +79,36 @@ body {
 	color: red; 		
 }
 
+.log-title {
+	display: flex;
+	text-align: center;
+	align-items: center;
+	justify-content: center;
+	font-size: 30px;
+	padding: 5px;
+	gap: 5rem;
+}
+
+.logs {
+	margin: 0 auto;
+}
+
+.headers {
+	font-size: 20px;
+}
+
 .name {
 	font-weight: 600;	
+}
+
+td.dates {
+	text-align: center;
+	padding: 5px 30px;
+}
+
+td.names {
+	text-align: left;
+	padding: 5px 30px;
 }
 
 #video-feed {

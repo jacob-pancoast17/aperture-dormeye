@@ -26,30 +26,32 @@
 		</form>
 	</div>
 
-	<form action="{{ url_for('delete_logs') }}">
-		<input type="submit" value="Remove Logs" />
-	</form>
+	<div class="log-title">
+		<form action="{{ url_for('delete_logs') }}">
+			<input type="submit" value="Remove Logs" />
+		</form>
 
-	<form action="{{ url_for('refresh_logs') }}">
-		<input type="submit" value="Refresh Logs" />
-	</form>
+		<h2>Logs</h2>
 
-	<h2>Logs</h2>
-	<table>
-		<tr>
+		<form action="{{ url_for('refresh_logs') }}">
+			<input type="submit" value="Refresh Logs" />
+		</form>
+	</div>
+	<table class="logs">
+		<tr class="headers">
 			<th>Date and Time</th>
 			<th>Name(s)</th>
 		</tr>
-		{% for log in logs %}
+		{% for log in logs|reverse %}
 		<tr>
-			<td>
+			<td class="dates">
 				{{ log.date }}
 			</td>
-			<td>
+			<td class="names">
 				{{ log.name }}
 			</td>
 		</tr>
 		{% endfor %}
-	</table>
+	</table	>
 </body>
 </html>

@@ -157,7 +157,7 @@ def creating_log(create_log):
     if create_log:
         requests.post("http://localhost:5000/create_log", json={
             "faces": current_faces,
-            "time": str(eastern_time.strftime("%Y-%m-%d %I:%M:%S %p"))
+            "time": str(eastern_time.strftime("%Y-%m-%d   %I:%M:%S %p"))
             })
         print("log created")
 

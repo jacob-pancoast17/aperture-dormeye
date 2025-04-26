@@ -155,9 +155,8 @@ def video():
 def create_log():
     data = request.get_json()
     faces = data.get("faces", [])
-    names = ""
-    for face in faces:
-        names += f'{face}, '
+    names = ", ".join(faces)
+    names = names.replace("_", " ")
     date = data.get("time")
 
     # Add a new log to the database
