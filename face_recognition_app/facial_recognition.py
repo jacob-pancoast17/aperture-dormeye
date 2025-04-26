@@ -37,9 +37,13 @@ start_time = time.time()
 fps = 0
 
 current_faces = []
+current_faces_count = 0
+previous_count = 0
+create_log = False
 
 def process_frame(frame):
-    global face_locations, face_encodings, face_names
+    global face_locations, face_encodings, face_names, current_faces, current_faces_count, previous_count, create_log
+    create_log = False
     
     # Resize the frame using cv_scaler to increase performance (less pixels processed, less time spent)
     resized_frame = cv2.resize(frame, (0, 0), fx=(1/cv_scaler), fy=(1/cv_scaler))
@@ -57,12 +61,10 @@ def process_frame(frame):
         matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
         name = "Unknown"
 
+        # New code
         if not known_face_encodings:
             face_names.append(name)
-            # New code
-            if name not in current_faces:
-                current_faces.append(name)
-            continue
+            continue    
         
         # Use the known face with the smallest distance to the new face
         face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
@@ -73,11 +75,20 @@ def process_frame(frame):
             name = known_face_names[best_match_index]
 
         face_names.append(name)
+
+        if name not in current_faces:
+            current_faces.append(name)
     
     for name in current_faces:
         if name not in face_names:
             current_faces.remove(name)
+    
+    current_faces_count = len(current_faces)
+    if (current_faces_count > previous_count):
+        create_log = True
     print(current_faces)
+    print(current_faces_count)
+    previous_count = current_faces_count
 
     return frame
 

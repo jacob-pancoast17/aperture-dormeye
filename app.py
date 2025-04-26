@@ -137,6 +137,7 @@ def register():
 @app.route('/main', methods=["GET", "POST"])
 def main():
     upload_form = UploadFileForm()
+    print("hello")
     
     if upload_form.submit.data and upload_form.validate_on_submit():
         #file = request.files.get('file') # Store the file in a variable
@@ -149,12 +150,28 @@ def main():
                     ) # Save the file
 
     #    return render_template("main.html", upload_form=upload_form, add_form=add_form)
+    print("before log test")
+    if facial_recognition.create_log == False:
+        print("no log")
+        return render_template("main.html", upload_form=upload_form)
+    elif facial_recognition.create_log == True:
+        print("log")
+        time = time.strftime("%a %d %Y %H:%M:%S", localtime())
+        names = ""
+        for face in facial_recognition.current_faces:
+            names += f'{face}, '
+        return render_template("main.html", upload_form=upload_form)
+    print("after log test")
 
     return render_template("main.html", upload_form=upload_form)
 
 @app.route('/video')
 def video():
     return Response(facial_recognition.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+#@app.route('/create_log', methods=["POST"])
+#def create_log():
+
 
 @app.route('/add', methods=["GET", "POST"])
 def add():
