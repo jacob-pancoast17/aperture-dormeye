@@ -26,10 +26,12 @@ pickle_path = os.path.join(basedir, 'face_recognition_app/encodings.pickle')
 app.config['PICKLE_LOCATION'] = f'{pickle_path}'
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}' # Connects app to the database for users
 app.config['SQLALCHEMY_BINDS'] = {
-            'logs': 'sqlite:///{logs_path}'
+            'logs': f'sqlite:///{logs_path}'
         }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+print(logs_path)
 
 bcrypt = Bcrypt(app)
 facial_recognition.load_encodings()
@@ -83,8 +85,10 @@ class User(db.Model):
     def __init__(self, name):
         self.name = name
 
-class Logs(db.Model):
+class Log(db.Model):
     __bind_key__ = 'logs'
+    #__tablename__ = 'logs'
+
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(100), unique=True)
     name = db.Column(db.String(50))
@@ -92,6 +96,9 @@ class Logs(db.Model):
     def __init__(self, date, name):
         self.date = date
         self.name = name
+
+with app.app_context():
+    db.create_all()
 
 class RegisterForm(FlaskForm):
     username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Username"})
@@ -136,41 +143,42 @@ def register():
 
 @app.route('/main', methods=["GET", "POST"])
 def main():
-    upload_form = UploadFileForm()
-    print("hello")
-    
-    if upload_form.submit.data and upload_form.validate_on_submit():
-        #file = request.files.get('file') # Store the file in a variable
-        file = upload_form.file.data
-        file.save(
-                os.path.join(
-                    os.path.abspath(os.path.dirname(__file_)),  
-                    app.config['UPLOAD_FOLDER'],
-                    secure_filename(file.filename))
-                    ) # Save the file
+    logs = Log.query.all()
 
-    #    return render_template("main.html", upload_form=upload_form, add_form=add_form)
-    print("before log test")
-    if facial_recognition.create_log == False:
-        print("no log")
-        return render_template("main.html", upload_form=upload_form)
-    elif facial_recognition.create_log == True:
-        print("log")
-        time = time.strftime("%a %d %Y %H:%M:%S", localtime())
-        names = ""
-        for face in facial_recognition.current_faces:
-            names += f'{face}, '
-        return render_template("main.html", upload_form=upload_form)
-    print("after log test")
-
-    return render_template("main.html", upload_form=upload_form)
+    return render_template("main.html", logs=logs)
 
 @app.route('/video')
 def video():
     return Response(facial_recognition.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-#@app.route('/create_log', methods=["POST"])
-#def create_log():
+@app.route('/create_log', methods=["POST"])
+def create_log():
+    data = request.get_json()
+    faces = data.get("faces", [])
+    names = ""
+    for face in faces:
+        names += f'{face}, '
+    date = data.get("time")
+
+    # Add a new log to the database
+    new_log = Log(date=date, name=names)
+    db.session.add(new_log)
+    db.session.commit()
+
+    logs = Log.query.all()
+
+    return render_template("main.html", logs=logs)
+
+@app.route('/refresh_logs', methods=["GET", "POST"])
+def refresh_logs():
+    return redirect(url_for('main'))
+
+@app.route('/delete_logs', methods=["GET", "POST"])
+def delete_logs():
+    Log.query.delete()
+    db.session.commit()
+
+    return redirect(url_for('main'))
 
 
 @app.route('/add', methods=["GET", "POST"])
@@ -248,7 +256,7 @@ def remove_user(user_id):
 
 with app.app_context():
     db.create_all()
-
+    db.create_all(bind_key=['logs'])
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0.', port=5000, debug=True, threaded=True)

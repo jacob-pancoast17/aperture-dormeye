@@ -25,5 +25,31 @@
 			<input type="submit" value="Users" />
 		</form>
 	</div>
+
+	<form action="{{ url_for('delete_logs') }}">
+		<input type="submit" value="Remove Logs" />
+	</form>
+
+	<form action="{{ url_for('refresh_logs') }}">
+		<input type="submit" value="Refresh Logs" />
+	</form>
+
+	<h2>Logs</h2>
+	<table>
+		<tr>
+			<th>Date and Time</th>
+			<th>Name(s)</th>
+		</tr>
+		{% for log in logs %}
+		<tr>
+			<td>
+				{{ log.date }}
+			</td>
+			<td>
+				{{ log.name }}
+			</td>
+		</tr>
+		{% endfor %}
+	</table>
 </body>
 </html>

@@ -5,6 +5,9 @@ from picamera2 import Picamera2
 import time
 import pickle
 import os
+import requests
+import datetime
+import zoneinfo
 
 def load_encodings():
     path = os.path.join(
@@ -86,8 +89,10 @@ def process_frame(frame):
     current_faces_count = len(current_faces)
     if (current_faces_count > previous_count):
         create_log = True
+    creating_log(create_log)
     print(current_faces)
     print(current_faces_count)
+    print(create_log)
     previous_count = current_faces_count
 
     return frame
@@ -147,5 +152,15 @@ def generate_frames():
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + byte_frame + b'\r\n')
 
+def creating_log(create_log):
+    eastern_time = datetime.datetime.now(datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo("America/New_York"))
+    if create_log:
+        requests.post("http://localhost:5000/create_log", json={
+            "faces": current_faces,
+            "time": str(eastern_time.strftime("%Y-%m-%d %I:%M:%S %p"))
+            })
+        print("log created")
+
 if __name__ == "__main__":
     initialize()
+
