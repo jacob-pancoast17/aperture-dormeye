@@ -111,17 +111,26 @@ td.names {
 	padding: 5px 30px;
 }
 
+input[type="submit"].remove-button {
+	padding: 5px 10px;
+	border-radius: 2px;
+	background-color: #2b6cb0;
+    	color: white;
+	font-size: 10px;
+}
+
 #video-feed {
 	display: block;
 	margin: auto;
 	width: 50%;
 }
 
-button, input[type="submit"] {
+button, input[type="submit"]:not(.remove-button) {
 	padding: 5px 10px;
 	border-radius: 2px;
 	background-color: #2b6cb0;
     	color: white;
+	font-size: 20px;
 }
 
 button:hover, input[type="submit"]:hover {
