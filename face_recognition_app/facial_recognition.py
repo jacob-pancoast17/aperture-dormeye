@@ -89,11 +89,9 @@ def process_frame(frame):
     current_faces_count = len(current_faces)
     if (current_faces_count > previous_count):
         create_log = True
-    creating_log(create_log)
-    print(current_faces)
-    print(current_faces_count)
-    print(create_log)
+    
     previous_count = current_faces_count
+    creating_log(create_log)
 
     return frame
 
@@ -153,13 +151,17 @@ def generate_frames():
                 b'Content-Type: image/jpeg\r\n\r\n' + byte_frame + b'\r\n')
 
 def creating_log(create_log):
-    eastern_time = datetime.datetime.now(datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo("America/New_York"))
     if create_log:
+        filename = datetime.datetime.now().strftime("%Y-%m-%d-%H.%M.%S.jpg")
+        save = "log_photos/" + filename
+        picam2.capture_file(save)
+        print("picture taken")
+
         requests.post("http://localhost:5000/create_log", json={
             "faces": current_faces,
-            "time": str(eastern_time.strftime("%Y-%m-%d   %I:%M:%S %p"))
+            "time": str(datetime.datetime.now().strftime("%Y-%m-%d   %I:%M:%S %p")),
+            "photo_filename": filename
             })
-        print("log created")
 
 if __name__ == "__main__":
     initialize()

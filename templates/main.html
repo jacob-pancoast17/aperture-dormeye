@@ -4,6 +4,12 @@
 	<meta charset='UTF-8'>
 	<title>account</title>
 	<link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}">
+	<script>
+		function openPopup(imageUrl) {
+					const popup = window.open("", "popup", "width=600,height=600");
+					popup.document.write("<img src='" + imageUrl + "' style='width: 100%'>")
+				}
+	</script>
 </head>
 <body>
 	<h1>Your DormEye</h1>
@@ -41,6 +47,7 @@
 		<tr class="headers">
 			<th>Date and Time</th>
 			<th>Name(s)</th>
+			<th>Photo</th>
 		</tr>
 		{% for log in logs|reverse %}
 		<tr>
@@ -49,6 +56,11 @@
 			</td>
 			<td class="names">
 				{{ log.name }}
+			</td>
+			<td>
+				{% if log.photo_filename %}
+					<button onclick="openPopup('/log_photos/{{ log.photo_filename }}')">Expand</button>
+				{% endif %}
 			</td>
 		</tr>
 		{% endfor %}

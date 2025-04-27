@@ -87,15 +87,16 @@ class User(db.Model):
 
 class Log(db.Model):
     __bind_key__ = 'logs'
-    #__tablename__ = 'logs'
 
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(100), unique=True)
     name = db.Column(db.String(50))
+    photo_filename = db.Column(db.String(100))
 
-    def __init__(self, date, name):
+    def __init__(self, date, name, photo_filename):
         self.date = date
         self.name = name
+        self.photo_filename = photo_filename
 
 with app.app_context():
     db.create_all()
@@ -154,13 +155,17 @@ def video():
 @app.route('/create_log', methods=["POST"])
 def create_log():
     data = request.get_json()
+
     faces = data.get("faces", [])
     names = ", ".join(faces)
     names = names.replace("_", " ")
+
     date = data.get("time")
 
+    photo_filename = data.get("photo_filename")
+
     # Add a new log to the database
-    new_log = Log(date=date, name=names)
+    new_log = Log(date=date, name=names, photo_filename=photo_filename)
     db.session.add(new_log)
     db.session.commit()
 
@@ -174,10 +179,21 @@ def refresh_logs():
 
 @app.route('/delete_logs', methods=["GET", "POST"])
 def delete_logs():
+    logs = Log.query.all()
+    folder = "log_photos"
+
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        os.remove(file_path)
+
     Log.query.delete()
     db.session.commit()
 
     return redirect(url_for('main'))
+
+@app.route('/log_photos/<path:filename>')
+def serve_log_photos(filename):
+    return send_from_directory('log_photos', filename)
 
 
 @app.route('/add', methods=["GET", "POST"])
